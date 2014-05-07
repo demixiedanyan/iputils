@@ -1,16 +1,22 @@
 #
 # Configuration
-#
+#配置
 
 # CC
+#指定cc为gcc编译程序的简称
 CC=gcc
 # Path to parent kernel include files directory
 LIBC_INCLUDE=/usr/include
 # Libraries
 ADDLIB=
+
 # Linker flags
+#wl选项告诉编译器将后面的参数传递给链接器
+#-wl，-Bstatic告诉链接器使用-Bstatic选项，该选项是告诉 链接器，对接下来的-l选项使用静态链接
 LDFLAG_STATIC=-Wl,-Bstatic
 LDFLAG_DYNAMIC=-Wl,-Bdynamic
+#指定需要加载的函数库有哪些，可以自行添加
+#下面加载的函数库是cap函数库等
 LDFLAG_CAP=-lcap
 LDFLAG_GNUTLS=-lgnutls-openssl
 LDFLAG_CRYPTO=-lcrypto
@@ -20,7 +26,7 @@ LDFLAG_SYSFS=-lsysfs
 
 #
 # Options
-#
+#定义变量，设置开关
 
 # Capability support (with libcap) [yes|static|no]
 USE_CAP=yes
@@ -49,6 +55,7 @@ ENABLE_RDISC_SERVER=no
 # -------------------------------------
 # What a pity, all new gccs are buggy and -Werror does not work. Sigh.
 # CCOPT=-fno-strict-aliasing -Wstrict-prototypes -Wall -Werror -g
+#-Wstrict-prototypes: 如果函数的声明或定义没有指出参数类型，编译器就发出警告
 CCOPT=-fno-strict-aliasing -Wstrict-prototypes -Wall -g
 CCOPTOPT=-O3
 GLIBCFIX=-D_GNU_SOURCE
@@ -131,6 +138,20 @@ all: $(TARGETS)
 	$(COMPILE.c) $< $(DEF_$(patsubst %.o,%,$@)) -o $@
 $(TARGETS): %: %.o
 	$(LINK.o) $^ $(LIB_$@) $(LDLIBS) -o $@
+#
+# COMPILE.c=$(CC) $(CFLAGS) $(CPPFLAGS) -c
+# $< 依赖目标中的第一个目标名字 
+# $@ 表示目标
+# $^ 所有的依赖目标的集合 
+# 在$(patsubst %.o,%,$@ )中，patsubst把目标中的变量符合后缀是.o的全部删除,  DEF_ping
+# LINK.o把.o文件链接在一起的命令行,缺省值是$(CC) $(LDFLAGS) $(TARGET_ARCH)
+#
+#
+#以ping为例，翻译为：
+# gcc -O3 -fno-strict-aliasing -Wstrict-prototypes -Wall -g -D_GNU_SOURCE    -c ping.c -DCAPABILITIES   -o ping.o
+#gcc   ping.o ping_common.o -lcap    -o ping
+
+
 
 # -------------------------------------
 # arping
