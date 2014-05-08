@@ -299,6 +299,8 @@ modules: check-kernel
 	$(MAKE) KERNEL_INCLUDE=$(KERNEL_INCLUDE) -C Modules
 #删除已生成的目标文件
 # -------------------------------------
+#生成man的帮助文档
+#生成网页格式的帮助文档
 man:
 	$(MAKE) -C doc man
 
@@ -306,15 +308,21 @@ html:
 	$(MAKE) -C doc html
 
  #容错处理
+
 clean:
+#删除所有生成的目标的二进制文件
 	@rm -f *.o $(TARGETS)
+#执行Modules目录下Makefile中的clean，删除指定的文件。
 	@$(MAKE) -C Modules clean
 	@$(MAKE) -C doc clean
+#如果ninfod目录下存在makefile文件，就进入ninfod目录并读取malefile文件
+#执行clean操作， 清除之前编译的可执行文件及配置文件。
 	@set -e; \
 		if [ -f ninfod/Makefile ]; then \
 			$(MAKE) -C ninfod clean; \
 		fi
 
+#清除ninfod目录下所有生成的文件
 distclean: clean
 	@set -e; \
 		if [ -f ninfod/Makefile ]; then \
@@ -324,19 +332,28 @@ distclean: clean
 # -------------------------------------
 #snapshot是CRecordset类的成员变量，通常作为CRecordset::Open()函数的参数，代表在记录集中可双向移动的快照。
 snapshot:
+#如果UNAME_N和pleiades的十六进制不等，提示信息，并退出
 	@if [ x"$(UNAME_N)" != x"pleiades" ]; then echo "Not authorized to advance snapshot"; exit 1; fi
 	@echo "[$(TAG)]" > RELNOTES.NEW
 	@echo >>RELNOTES.NEW
+#将git log和git shortlog的输出信息经过管道符号重定向到RELOTES.NEW
 	@git log --no-merges $(LASTTAG).. | git shortlog >> RELNOTES.NEW
 	@echo >> RELNOTES.NEW
+#将RELNOTES的内容重定向的RELNOTES.NEW
 	@cat RELNOTES >> RELNOTES.NEW
 	@mv RELNOTES.NEW RELNOTES
 	@sed -e "s/^%define ssdate .*/%define ssdate $(DATE)/" iputils.spec > iputils.spec.tmp
+#将inputils.spec.tmp重命名
 	@mv iputils.spec.tmp iputils.spec
+#将TAG变量中的内容重定向到SNAPSHOT.h文档中
 	@echo "static char SNAPSHOT[] = \"$(TAG)\";" > SNAPSHOT.h
+#生成snapshot的doc文档。
 	@$(MAKE) -C doc snapshot
 	@$(MAKE) man
+#修改/添加/上传 文件
 	@git commit -a -m "iputils-$(TAG)"
+#创建带有说明的标签，并使用私钥签名
 	@git tag -s -m "iputils-$(TAG)" $(TAG)
+#打包工作
 	@git archive --format=tar --prefix=iputils-$(TAG)/ $(TAG) | bzip2 -9 > ../iputils-$(TAG).tar.bz2
 
