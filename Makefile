@@ -88,6 +88,7 @@ GLIBCFIX=-D_GNU_SOURCE
 DEFINES=
 LDLIB=
 
+#filter static 为静态过滤函数
 FUNC_LIB = $(if $(filter static,$(1)),$(LDFLAG_STATIC) $(2) $(LDFLAG_DYNAMIC),$(2))
 
 #----------------------------------------------------------------
